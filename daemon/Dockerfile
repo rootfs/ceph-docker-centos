@@ -10,4 +10,4 @@ VOLUME ["/etc/ceph","/var/lib/ceph"]
 
 # Execute the entrypoint
 WORKDIR /
-ENTRYPOINT /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]

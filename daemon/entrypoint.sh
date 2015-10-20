@@ -1,8 +1,9 @@
+#!/bin/bash
 set -e
 
 : ${CLUSTER:=ceph}
 : ${CEPH_CLUSTER_NETWORK:=${CEPH_PUBLIC_NETWORK}}
-: ${CEPH_DAEMON:=${CEPH_DAEMON}}
+: ${CEPH_DAEMON:=$1} # default daemon to first argument
 : ${CEPH_GET_ADMIN_KEY:=0}
 : ${HOSTNAME:=$(hostname -s)}
 : ${MON_NAME:=${HOSTNAME}}
@@ -60,7 +61,7 @@ case "$KV_TYPE" in
       source config.kv.sh
       ;;
    *)
-      source ./config.static.sh
+      source config.static.sh
       ;;
 esac
 
@@ -404,6 +405,7 @@ function start_restapi {
   # Check to see if we need to add a [client.restapi] section; add, if necessary
   if [[ ! "$(egrep "\[client.restapi\]" /etc/ceph/${CLUSTER}.conf)" ]]; then
     cat <<ENDHERE >>/etc/ceph/${CLUSTER}.conf
+
 [client.restapi]
   public addr = ${RESTAPI_IP}:${RESTAPI_PORT}
   restapi base url = ${RESTAPI_BASE_URL}
