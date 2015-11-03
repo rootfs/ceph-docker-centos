@@ -218,16 +218,31 @@ function osd_directory {
       ceph ${CEPH_OPTS} --name=osd.${OSD_ID} --keyring=/var/lib/ceph/osd/${CLUSTER}-${OSD_ID}/keyring osd crush create-or-move -- ${OSD_ID} ${OSD_WEIGHT} ${CRUSH_LOCATION}
     fi
 
-    mkdir -p /etc/service/${CLUSTER}-${OSD_ID}
-    cat >/etc/service/${CLUSTER}-${OSD_ID}/run <<EOF
-#!/bin/bash
-echo "store-daemon: starting daemon on ${HOSTNAME}..."
-exec ceph-osd ${CEPH_OPTS} -f -d -i ${OSD_ID} --osd-journal ${OSD_J} -k /var/lib/ceph/osd/ceph-${OSD_ID}/keyring
+
+   cat >/usr/lib/systemd/system/ceph-osd-${CLUSTER}-${OSD_ID}.service <<EOF
+[Unit]
+Description=Ceph OSD
+After=network.target
+Wants=
+
+[Service]
+Type=notify
+Environment=GOTRACEBACK=crash
+ExecStart=ceph-osd ${CEPH_OPTS} -f -d -i ${OSD_ID} --osd-journal ${OSD_J} -k /var/lib/ceph/osd/ceph-${OSD_ID}/keyring
+LimitNOFILE=1048576
+LimitNPROC=1048576
+LimitCORE=infinity
+MountFlags=slave
+
+[Install]
+WantedBy=multi-user.target
 EOF
-    chmod +x /etc/service/${CLUSTER}-${OSD_ID}/run
+
   done
 
-exec /sbin/my_init
+systemctl enable ceph-osd-${CLUSTER}-${OSD_ID}.service
+systemctl start ceph-osd-${CLUSTER}-${OSD_ID}.service
+
 }
 
 #################
